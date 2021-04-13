@@ -1,0 +1,79 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: myreplica1
+  labels:
+    app  : myk8sapplication
+    env  : prod
+    owner: BagratHarut
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      project: k8s
+  template:
+    metadata:
+      labels:
+        project: k8s
+    spec:
+      containers:
+        - name : k8s-web
+          image: bagrat92/laravel-kubernetes:latest
+          ports:
+            - containerPort: 8000
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myreplica1
+  minReplicas : 3
+  maxReplicas : 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 70
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-redis
+  labels:
+    app : redis
+    role: leader
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app : redis
+        role: leader
+        tier: backend
+    spec:
+      containers:
+      - name : leader
+        image: docker.io/redis:6.0.5
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+          name: memory
+          targetAverageUtilization: 80
+      ports:
+      - containerPort: 6379
