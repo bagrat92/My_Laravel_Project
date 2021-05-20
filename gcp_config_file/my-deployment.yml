@@ -20,7 +20,7 @@ spec:
         - name : k8s-web
           image: bagrat92/laravel-kubernetes:latest
           ports:
-            - containerPort: 8000
+            - containerPort: 80
 
 ---
 apiVersion: autoscaling/v1
